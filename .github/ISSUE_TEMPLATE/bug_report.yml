@@ -1,0 +1,49 @@
+name: Bug report
+description: Something does not work as it should.
+labels: [bug]
+body:
+  - type: dropdown
+    id: minecraft
+    attributes:
+      label: Minecraft version
+      options:
+        - 1.20.1 (Forge)
+        - 1.21.1 (NeoForge)
+        - 26.1 (NeoForge)
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Mod and loader versions
+      description: Matter Manipulator and Forge/NeoForge versions, plus any integrated mod involved (AE2, GTCEu, ...) with its version.
+      placeholder: Matter Manipulator 0.1.0+1.20.1, Forge 47.3.0, AE2 15.4.10
+    validations:
+      required: true
+  - type: input
+    id: mode
+    attributes:
+      label: Mode and tier
+      placeholder: Copy mode, MKII
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where does it happen?
+      options:
+        - In the preview
+        - While building
+        - Both
+        - Somewhere else
+  - type: textarea
+    id: steps
+    attributes:
+      label: What happened, and how to reproduce it
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Log
+      description: The relevant part of latest.log (client or server), or a link to the full log or crash report.
+      render: text

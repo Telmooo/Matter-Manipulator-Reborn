@@ -1,0 +1,27 @@
+name: Mod support request
+description: Ask for an integration with another mod.
+labels: [mod support]
+body:
+  - type: input
+    id: mod
+    attributes:
+      label: Mod
+      description: Name and a link (CurseForge, Modrinth or source).
+    validations:
+      required: true
+  - type: dropdown
+    id: minecraft
+    attributes:
+      label: Minecraft versions
+      multiple: true
+      options:
+        - 1.20.1
+        - 1.21.1
+        - "26.1"
+  - type: textarea
+    id: what
+    attributes:
+      label: What goes wrong today
+      description: Which blocks lose settings, contents, connections or orientation when copied or moved, or cannot be paid for.
+    validations:
+      required: true

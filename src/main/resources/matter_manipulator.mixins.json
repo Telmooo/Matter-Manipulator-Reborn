@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "lu.kolja.matter_manipulator.mixins",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "matter_manipulator.refmap.json",
+  "mixins": [
+    "ModelDataManagerMixin",
+    "integration.gtceu.AccessorMaintenanceHatchPartMachine"
+  ],
+  "client": [],
+  "server": [],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
