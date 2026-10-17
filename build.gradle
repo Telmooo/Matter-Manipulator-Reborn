@@ -116,34 +116,43 @@ repositories {
 }
 
 dependencies {
+    // we don't want need other mods in our data run
+    def dataRun = gradle.startParameter.taskNames.any { it.toLowerCase().contains("rundata") }
+    def implement = { String mod ->
+        modCompileOnly(mod) { transitive = false }
+        if (!dataRun) {
+            modRuntimeOnly(mod) { transitive = false }
+        }
+    }
+
     compileOnly "org.projectlombok:lombok:1.18.32"
     annotationProcessor "org.projectlombok:lombok:1.18.32"
 
-    modImplementation("appeng:appliedenergistics2-forge:15.4.10") { transitive = false }
-    modRuntimeOnly "curse.maven:guideme-1173950:6489464"
+    implement("appeng:appliedenergistics2-forge:15.4.10")
+    implement "curse.maven:guideme-1173950:6489464"
 
-    modImplementation("com.gregtechceu.gtceu:gtceu-1.20.1:$gtceu_version") { transitive = false }
-    modImplementation("com.lowdragmc.ldlib:ldlib-forge-1.20.1:$ldlib_version") { transitive = false }
+    implement("com.gregtechceu.gtceu:gtceu-1.20.1:$gtceu_version")
+    implement("com.lowdragmc.ldlib:ldlib-forge-1.20.1:$ldlib_version")
     jarJar(modApi("com.tterrag.registrate:Registrate:MC1.20-1.3.11"))
 
-    modImplementation("curse.maven:flux-networks-248020:5234697") { transitive = false }
-    modImplementation("curse.maven:framedblocks-441647:7386520") { transitive = false }
-    modImplementation("curse.maven:laserio-626839:5074767") { transitive = false }
-    modImplementation("io.codechicken:CodeChickenLib:1.20.1-4.4.0.528:universal") { transitive = false }
-    modImplementation("io.codechicken:CBMultipart:1.20.1-3.3.0.159:universal") { transitive = false }
-    modImplementation("mrtjp:ProjectRed:1.20.1-4.21.0:core") { transitive = false }
-    modImplementation("mrtjp:ProjectRed:1.20.1-4.21.0:integration") { transitive = false }
-    modImplementation("mrtjp:ProjectRed:1.20.1-4.21.0:transmission") { transitive = false }
-    modImplementation("mrtjp:ProjectRed:1.20.1-4.21.0:illumination") { transitive = false }
-    modImplementation("mrtjp:ProjectRed:1.20.1-4.21.0:expansion") { transitive = false }
-    modImplementation("mrtjp:ProjectRed:1.20.1-4.21.0:fabrication") { transitive = false }
-    modImplementation("mrtjp:ProjectRed:1.20.1-4.21.0:exploration") { transitive = false }
-    modImplementation("curse.maven:creativecore-257814:8304882") { transitive = false }
-    modImplementation("curse.maven:littletiles-257818:6610285") { transitive = false }
-    modImplementation("curse.maven:rechiseled-558998:8301383") { transitive = false }
-    modImplementation("curse.maven:supermartijn642s-core-lib-454372:7521769") { transitive = false }
-    modImplementation("curse.maven:supermartijn642s-config-lib-438332:4715408") { transitive = false }
-    modImplementation("maven.modrinth:fusion-connected-textures:1.3.1-forge-mc1.20.1") { transitive = false }
+    implement("curse.maven:flux-networks-248020:5234697")
+    implement("curse.maven:framedblocks-441647:7386520")
+    implement("curse.maven:laserio-626839:5074767")
+    implement("io.codechicken:CodeChickenLib:1.20.1-4.4.0.528:universal")
+    implement("io.codechicken:CBMultipart:1.20.1-3.3.0.159:universal")
+    implement("mrtjp:ProjectRed:1.20.1-4.21.0:core")
+    implement("mrtjp:ProjectRed:1.20.1-4.21.0:integration")
+    implement("mrtjp:ProjectRed:1.20.1-4.21.0:transmission")
+    implement("mrtjp:ProjectRed:1.20.1-4.21.0:illumination")
+    implement("mrtjp:ProjectRed:1.20.1-4.21.0:expansion")
+    implement("mrtjp:ProjectRed:1.20.1-4.21.0:fabrication")
+    implement("mrtjp:ProjectRed:1.20.1-4.21.0:exploration")
+    implement("curse.maven:creativecore-257814:8304882")
+    implement("curse.maven:littletiles-257818:6610285")
+    implement("curse.maven:rechiseled-558998:8301383")
+    implement("curse.maven:supermartijn642s-core-lib-454372:7521769")
+    implement("curse.maven:supermartijn642s-config-lib-438332:4715408")
+    implement("maven.modrinth:fusion-connected-textures:1.3.1-forge-mc1.20.1")
 
     compileOnly 'org.jetbrains:annotations:26.1.0'
 
