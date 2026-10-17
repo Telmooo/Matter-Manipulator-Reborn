@@ -27,7 +27,7 @@ side="BOTH"
 [[dependencies.${mod_id}]]
 modId="gtceu"
 mandatory=false
-versionRange="[7.2.0,8.0.0)"
+versionRange="[1.7.0,2.0),[7.2.0,8.0.0)"
 ordering="AFTER"
 side="BOTH"
 
