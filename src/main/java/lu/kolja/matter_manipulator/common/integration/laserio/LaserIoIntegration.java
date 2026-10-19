@@ -10,7 +10,7 @@ import lu.kolja.matter_manipulator.api.PlacementPurpose;
 
 import com.direwolf20.laserio.common.blockentities.LaserNodeBE;
 import com.direwolf20.laserio.common.blockentities.basebe.BaseLaserBE;
-import com.direwolf20.laserio.common.containers.LaserNodeContainer;
+import com.direwolf20.laserio.common.blocks.LaserNode;
 import com.direwolf20.laserio.common.containers.customhandler.CardItemHandler;
 import com.direwolf20.laserio.common.items.cards.BaseCard;
 import com.direwolf20.laserio.common.items.cards.CardEnergy;
@@ -19,7 +19,7 @@ import com.direwolf20.laserio.common.items.cards.CardItem;
 import com.direwolf20.laserio.common.items.filters.BaseFilter;
 import com.direwolf20.laserio.common.items.upgrades.OverclockerCard;
 import com.direwolf20.laserio.common.items.upgrades.OverclockerNode;
-import com.direwolf20.laserio.setup.Registration;
+import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CollectionTag;
@@ -28,7 +28,11 @@ import net.minecraft.nbt.NbtUtils;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.fml.config.ConfigTracker;
+import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import java.awt.Color;
 import java.util.ArrayList;
@@ -58,17 +62,24 @@ public final class LaserIoIntegration {
     private static final String PARTNER = "partnerDimPos";
     private static final String SNEAKY = "sneaky";
     private static final String INVENTORY = "Inventory";
+    private static final int CARD_SLOTS = 9;
     private static final int OVERCLOCKER_SLOT = 9;
     private static final int[] ENERGY_LIMITS = {1000, 4000, 16000, 32000, 100000};
 
     private LaserIoIntegration() {}
 
     public static void register(IntegrationRegistrar registrar) {
-        var node = Registration.LaserNode.get();
-        var connector = Registration.LaserConnector.get();
-        var advancedConnector = Registration.LaserConnectorAdv.get();
+        var node = block("laser_node");
+        var connector = block("laser_connector");
+        var advancedConnector = block("laser_connector_advanced");
         registrar.block(NODE_ID, new NodeIntegration(), node, connector, advancedConnector);
         registrar.block(LINKS_ID, new LinksIntegration(), node, connector, advancedConnector);
+    }
+
+    private static Block block(String path) {
+        return ForgeRegistries.BLOCKS.getHolder(new ResourceLocation("laserio", path))
+                .orElseThrow(() -> new IllegalStateException("LaserIO did not register laserio:" + path))
+                .value();
     }
 
     private static final class NodeIntegration implements BlockIntegration {
@@ -101,7 +112,7 @@ public final class LaserIoIntegration {
 
         @Override
         public boolean transformsBlockEntity(BlockState state) {
-            return state.is(Registration.LaserNode.get());
+            return state.getBlock() instanceof LaserNode;
         }
 
         @Override
@@ -345,7 +356,7 @@ public final class LaserIoIntegration {
             var handler = node.nodeSideCaches[direction.ordinal()].itemHandler;
             var side = new CompoundTag();
             var cards = new CompoundTag();
-            for (int slot = 0; slot < LaserNodeContainer.CARDSLOTS; slot++) {
+            for (int slot = 0; slot < CARD_SLOTS; slot++) {
                 var stack = handler.getStackInSlot(slot);
                 if (stack.getItem() instanceof BaseCard) {
                     cards.put(Integer.toString(slot), captureCard(stack));
@@ -412,7 +423,7 @@ public final class LaserIoIntegration {
                 if (!overclockers.isEmpty()) {
                     inventory.setStackInSlot(energy ? 0 : 1, overclockers);
                 }
-                clamp(card, overclockers.getCount());
+                clamp(card, overclockers);
                 installs.add(new Install(direction, Integer.parseInt(slot), card));
             }
             var overclockers = stack(side, OVERCLOCKERS);
@@ -423,30 +434,63 @@ public final class LaserIoIntegration {
         return installs;
     }
 
-    private static void clamp(ItemStack card, int overclockers) {
-        int minimumTicks = Math.max(20 - overclockers * 5, 1);
+    private static void clamp(ItemStack card, ItemStack overclockers) {
+        var uel = uelLimits();
+        int count = overclockers.getCount();
         if (card.getItem() instanceof CardItem) {
-            int maximum = Math.max(overclockers * 16, 8);
+            int maximum = Math.max(count * 16, 8);
             if (CardItem.getItemExtractAmt(card) > maximum) {
                 CardItem.setItemExtractAmt(card, (byte) maximum);
             }
-            if (BaseCard.getExtractSpeed(card) < minimumTicks) {
-                BaseCard.setExtractSpeed(card, minimumTicks);
+            int minimumTicks = uel == null ? Math.max(20 - count * 5, 1)
+                    : perOverclocker(uel.get("card.item_card.min_ticks_item"), count);
+            if (CardItem.getExtractSpeed(card) < minimumTicks) {
+                CardItem.setExtractSpeed(card, minimumTicks);
             }
         } else if (card.getItem() instanceof CardFluid) {
-            int maximum = Math.max(overclockers * 2000, 1000);
+            int maximum = uel == null ? Math.max(count * 2000, 1000)
+                    : Math.max(count * uel.getInt("card.fluid_card.multiplier_milli_buckets_fluid"),
+                            uel.getInt("card.fluid_card.base_milli_buckets_fluid"));
             if (CardFluid.getFluidExtractAmt(card) > maximum) {
                 CardFluid.setFluidExtractAmt(card, maximum);
             }
-            if (BaseCard.getExtractSpeed(card) < minimumTicks) {
-                BaseCard.setExtractSpeed(card, minimumTicks);
+            int minimumTicks = uel == null ? Math.max(20 - count * 5, 1)
+                    : perOverclocker(uel.get("card.fluid_card.min_ticks_fluid"), count);
+            if (CardFluid.getExtractSpeed(card) < minimumTicks) {
+                CardFluid.setExtractSpeed(card, minimumTicks);
             }
         } else if (card.getItem() instanceof CardEnergy) {
-            int maximum = ENERGY_LIMITS[Math.min(overclockers, ENERGY_LIMITS.length - 1)];
+            int maximum = uel == null ? ENERGY_LIMITS[Math.min(count, ENERGY_LIMITS.length - 1)]
+                    : uelEnergyLimit(uel, overclockers);
             if (CardEnergy.getEnergyExtractAmt(card) > maximum) {
                 CardEnergy.setEnergyExtractAmt(card, maximum);
             }
         }
+    }
+
+    private static UnmodifiableConfig uelLimits() {
+        for (var config : ConfigTracker.INSTANCE.configSets().get(ModConfig.Type.COMMON)) {
+            var data = config.getConfigData();
+            if (config.getModId().equals("laserio") && data != null && data.contains("card")) {
+                return data;
+            }
+        }
+        return null;
+    }
+
+    private static int perOverclocker(List<? extends Number> values, int overclockers) {
+        return values.isEmpty() ? 1 : values.get(Math.min(overclockers, values.size() - 1)).intValue();
+    }
+
+    private static int uelEnergyLimit(UnmodifiableConfig uel, ItemStack overclocker) {
+        List<? extends Number> tiers = uel.get("card.energy_card.energy_overclockers.max_fe_tiers");
+        var id = ForgeRegistries.ITEMS.getKey(overclocker.getItem());
+        for (int tier = 1; tier <= tiers.size(); tier++) {
+            if (!overclocker.isEmpty() && id.getPath().equals("energy_overclocker_card_tier_" + tier)) {
+                return tiers.get(tier - 1).intValue();
+            }
+        }
+        return uel.getInt("card.energy_card.max_fe_no_tiers");
     }
 
     private static CardItemHandler cardInventory(ItemStack card) {

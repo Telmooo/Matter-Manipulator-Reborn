@@ -32,6 +32,7 @@ Machines, cables, their settings, and filters from the mods below are handled pr
 | [FramedBlocks](https://www.curseforge.com/minecraft/mc-mods/framedblocks) | ✅ | ✅ | ✅ |
 | [GTCEu Modern](https://www.curseforge.com/minecraft/mc-mods/gregtechceu-modern) | ✅ | ✅ | ❌ |
 | [LaserIO](https://www.curseforge.com/minecraft/mc-mods/laserio) | ✅ | ✅ | ✅ |
+| [LaserIO Unofficial Extended Life](https://www.curseforge.com/projects/1168178) | ✅ | ❌ | ❌ |
 | [LittleTiles](https://www.curseforge.com/minecraft/mc-mods/littletiles) | ✅ | ✅ | ❌ |
 | [Project Red](https://www.curseforge.com/minecraft/mc-mods/project-red-transmission) | ✅ | ✅ | ❌ |
 | [Rechiseled](https://www.curseforge.com/minecraft/mc-mods/rechiseled) | ✅ | ✅ | ✅ |
