@@ -6,7 +6,7 @@
   "refmap": "matter_manipulator.refmap.json",
   "mixins": [
     "ModelDataManagerMixin",
-    "integration.gtceu.AccessorMaintenanceHatchPartMachine"
+    "integration.gtceu.v7.AccessorMaintenanceHatchPartMachine"
   ],
   "client": [],
   "server": [],

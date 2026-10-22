@@ -66,6 +66,14 @@ public interface BlockIntegration {
         return transformed;
     }
 
+    default BlockState storedState(BlockState state) {
+        return state;
+    }
+
+    default BlockState loadedState(BlockState stored) {
+        return stored;
+    }
+
     /**
      * Remaps positions in an owned copy of moved block-entity NBT, before {@link #transformBlockEntity} runs.
      * Must not access the world. Throwing refuses the whole group before anything mutates.

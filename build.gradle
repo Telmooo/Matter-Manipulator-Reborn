@@ -23,6 +23,16 @@ sourceSets.main.resources {
     exclude ".cache"
 }
 
+sourceSets {
+    gtm7 {
+        compileClasspath += main.output + main.compileClasspath
+    }
+    gtm8 {
+        compileClasspath += main.output + main.compileClasspath
+    }
+    main.runtimeClasspath += gtm7.output + gtm8.output
+}
+
 legacyForge {
     version = "${minecraft_version}-${forge_version}"
 
@@ -34,6 +44,8 @@ legacyForge {
     mods {
         "${mod_id}" {
             sourceSet(sourceSets.main)
+            sourceSet(sourceSets.gtm7)
+            sourceSet(sourceSets.gtm8)
         }
     }
 
@@ -73,6 +85,11 @@ mixin {
     config "${mod_id}.mixins.json"
 }
 
+obfuscation {
+    createRemappingConfiguration(configurations.gtm7CompileOnly)
+    createRemappingConfiguration(configurations.gtm8CompileOnly)
+}
+
 repositories {
     maven {
         url = uri("https://cursemaven.com")
@@ -91,6 +108,7 @@ repositories {
         url = uri("https://maven.gtceu.com")
         content {
             includeGroup "com.gregtechceu.gtceu"
+            includeGroup "brachy.modularui"
         }
     }
     maven {
@@ -131,8 +149,14 @@ dependencies {
     implement("appeng:appliedenergistics2-forge:15.4.10")
     implement "curse.maven:guideme-1173950:6489464"
 
-    implement("com.gregtechceu.gtceu:gtceu-1.20.1:$gtceu_version")
-    implement("com.lowdragmc.ldlib:ldlib-forge-1.20.1:$ldlib_version")
+    modGtm7CompileOnly("com.gregtechceu.gtceu:gtceu-1.20.1:$gtceu_version") { transitive = false }
+    modGtm7CompileOnly("com.lowdragmc.ldlib:ldlib-forge-1.20.1:$ldlib_version") { transitive = false }
+    modGtm8CompileOnly("com.gregtechceu.gtceu:gtceu-1.20.1:$gtceu8_version") { transitive = false }
+    modGtm8CompileOnly("brachy.modularui:modularui-mc1.20.1:$gtceu8_modularui_version") { transitive = false }
+    if (!dataRun) {
+        modRuntimeOnly("com.gregtechceu.gtceu:gtceu-1.20.1:$gtceu_version") { transitive = false }
+        modRuntimeOnly("com.lowdragmc.ldlib:ldlib-forge-1.20.1:$ldlib_version") { transitive = false }
+    }
     jarJar(modApi("com.tterrag.registrate:Registrate:MC1.20-1.3.11"))
 
     implement("curse.maven:flux-networks-248020:5234697")
@@ -163,6 +187,29 @@ dependencies {
 
     compileOnly(annotationProcessor("lu.kolja:mixinloadconditions-common:0.2.0"))
     implementation(jarJar("lu.kolja:mixinloadconditions-forge:0.2.0"))
+}
+
+["gtm7", "gtm8"].each { adapter ->
+    def namedJar = tasks.register("${adapter}Jar", Jar) {
+        from sourceSets[adapter].output
+        archiveClassifier = adapter
+        destinationDirectory = layout.buildDirectory.dir("adapters")
+    }
+    def remappedJar = tasks.register("reobf${adapter.capitalize()}Jar", net.neoforged.moddevgradle.legacyforge.tasks.RemapJar) {
+        input = namedJar.flatMap { it.archiveFile }
+        libraries.from(sourceSets[adapter].compileClasspath)
+        archiveClassifier = "${adapter}-reobf"
+        destinationDirectory = layout.buildDirectory.dir("adapters")
+        obfuscation.configureNamedToSrgOperation(remapOperation)
+    }
+    tasks.named("jar", Jar) {
+        from(remappedJar.flatMap { it.archiveFile }.map { zipTree(it) }) {
+            exclude "META-INF/MANIFEST.MF"
+        }
+    }
+    tasks.named("sourcesJar", Jar) {
+        from sourceSets[adapter].allSource
+    }
 }
 
 jar {

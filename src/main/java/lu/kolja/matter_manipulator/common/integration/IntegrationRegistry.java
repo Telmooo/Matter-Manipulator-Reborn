@@ -65,6 +65,8 @@ public final class IntegrationRegistry {
     private final HandlerIndex<PlacementCostIntegration> costs;
     private final Map<BlockState, List<HandlerEntry<BlockIntegration>>> blockEntityTransforms = new ConcurrentHashMap<>();
     private final Map<BlockState, List<HandlerEntry<BlockIntegration>>> blockEntityRelocations = new ConcurrentHashMap<>();
+    private final Map<BlockState, BlockState> storedStates = new ConcurrentHashMap<>();
+    private final Map<BlockState, BlockState> loadedStates = new ConcurrentHashMap<>();
     private final Map<BlockState, HandlerEntry<BlockIntegration>> transferredBlockEntities;
     private final List<StorageEntry> storage;
     private final List<CraftingEntry> crafting;
@@ -461,6 +463,42 @@ public final class IntegrationRegistry {
 
     public boolean hasBlockEntityRelocation(BlockState state) {
         return !blockEntityRelocations(state).isEmpty();
+    }
+
+    public BlockState storedState(BlockState state) {
+        var cached = storedStates.get(state);
+        if (cached != null) {
+            return cached;
+        }
+        var stored = state;
+        for (var entry : blocks.matching(state)) {
+            try {
+                stored = Objects.requireNonNull(entry.handler().storedState(stored), "Integration stored state");
+            } catch (RuntimeException | LinkageError exception) {
+                IntegrationFailures.report(entry.id(), "stored_state", state, exception);
+            }
+        }
+        var previous = storedStates.putIfAbsent(state, stored);
+        return previous != null ? previous : stored;
+    }
+
+    public BlockState loadedState(BlockState stored) {
+        var cached = loadedStates.get(stored);
+        if (cached != null) {
+            return cached;
+        }
+        var handlers = blocks.matching(stored);
+        var loaded = stored;
+        for (int index = handlers.size() - 1; index >= 0; index--) {
+            var entry = handlers.get(index);
+            try {
+                loaded = Objects.requireNonNull(entry.handler().loadedState(loaded), "Integration loaded state");
+            } catch (RuntimeException | LinkageError exception) {
+                IntegrationFailures.report(entry.id(), "loaded_state", stored, exception);
+            }
+        }
+        var previous = loadedStates.putIfAbsent(stored, loaded);
+        return previous != null ? previous : loaded;
     }
 
     private List<HandlerEntry<BlockIntegration>> blockEntityRelocations(BlockState state) {

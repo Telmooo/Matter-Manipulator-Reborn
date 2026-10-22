@@ -17,7 +17,7 @@ body:
     attributes:
       label: Mod and loader versions
       description: Matter Manipulator and Forge/NeoForge versions, plus any integrated mod involved (AE2, GTCEu, ...) with its version.
-      placeholder: Matter Manipulator 0.1.0+1.20.1, Forge 47.3.0, AE2 15.4.10
+      placeholder: Matter Manipulator 0.1.0+1.20.1, Forge 47.4.0, AE2 15.4.10
     validations:
       required: true
   - type: input

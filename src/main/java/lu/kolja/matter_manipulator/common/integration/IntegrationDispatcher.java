@@ -14,7 +14,7 @@ import lu.kolja.matter_manipulator.api.ItemDemand;
 import lu.kolja.matter_manipulator.api.ItemRequirement;
 import lu.kolja.matter_manipulator.api.PlacementRequirements;
 import lu.kolja.matter_manipulator.api.PlacementPurpose;
-import lu.kolja.matter_manipulator.common.integration.gtceu.GtceuIntegration;
+import lu.kolja.matter_manipulator.common.integration.gtceu.GTIntegration;
 import lu.kolja.matter_manipulator.common.manipulator.ToolTransform;
 import lu.kolja.matter_manipulator.common.state.CapturedBlock;
 import net.minecraft.core.BlockPos;
@@ -59,7 +59,7 @@ public final class IntegrationDispatcher {
                 Ae2Integration.register(builder);
             }
             if (mods.isLoaded("gtceu")) {
-                GtceuIntegration.register(builder);
+                GTIntegration.register(builder);
             }
             if (mods.isLoaded("fluxnetworks")) {
                 FluxNetworksIntegration.register(builder);
@@ -273,6 +273,16 @@ public final class IntegrationDispatcher {
 
     public static boolean isCable(BlockState state) {
         return get().isCable(state);
+    }
+
+    public static BlockState storedState(BlockState state) {
+        var current = registry;
+        return current == null ? state : current.storedState(state);
+    }
+
+    public static BlockState loadedState(BlockState stored) {
+        var current = registry;
+        return current == null ? stored : current.loadedState(stored);
     }
 
     public static boolean canReuseCable(

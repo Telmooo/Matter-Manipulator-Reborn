@@ -1,6 +1,7 @@
 package lu.kolja.matter_manipulator.common.state;
 
 import lu.kolja.matter_manipulator.common.build.PlanStats;
+import lu.kolja.matter_manipulator.common.integration.IntegrationDispatcher;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
@@ -40,7 +41,8 @@ public final class BlockStateSpec {
     private static BlockStateSpec create(BlockState state) {
         var id = BuiltInRegistries.BLOCK.getKey(state.getBlock());
         var props = new CompoundTag();
-        for (var entry : state.getValues().entrySet()) {
+        var stored = IntegrationDispatcher.storedState(state);
+        for (var entry : stored.getValues().entrySet()) {
             props.putString(entry.getKey().getName(), propertyValueName(entry.getKey(), entry.getValue()));
         }
         return new BlockStateSpec(id, props);
@@ -93,7 +95,7 @@ public final class BlockStateSpec {
                 state = setProperty(state, property, properties.getString(property.getName()));
             }
         }
-        return Optional.of(state);
+        return Optional.of(IntegrationDispatcher.loadedState(state));
     }
 
     public BlockState resolve() {
